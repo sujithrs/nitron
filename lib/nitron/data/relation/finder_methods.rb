@@ -38,6 +38,12 @@ module Nitron
           self.fetchLimit = 1
           to_a[0]
         end
+
+        def last
+          self.fetchOffset = self.count - 1 unless self.count < 1
+          self.fetchLimit = 1
+          to_a[0]
+        end
       
         def limit(l)
           l = l.to_i

@@ -37,6 +37,14 @@ module Nitron
           def first!
             first or raise Nitron::RecordNotFound
           end
+
+          def last
+            relation.last
+          end
+
+          def last!
+            last or raise Nitron::RecordNotFound
+          end
         
           def limit(l)
             relation.limit(l)
