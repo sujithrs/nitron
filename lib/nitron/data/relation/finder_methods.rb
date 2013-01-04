@@ -9,8 +9,11 @@ module Nitron
       
         def count
           return to_a.count if fetchOffset > 0
+          old_result_type = self.resultType
           self.resultType = NSCountResultType
-          to_a[0]
+          count = to_a[0]
+          self.resultType = old_result_type
+          return count
         end
         
         def destroy_all
@@ -32,6 +35,12 @@ module Nitron
         end
       
         def first
+          self.fetchLimit = 1
+          to_a[0]
+        end
+
+        def last
+          self.fetchOffset = self.count - 1 unless self.count < 1
           self.fetchLimit = 1
           to_a[0]
         end
