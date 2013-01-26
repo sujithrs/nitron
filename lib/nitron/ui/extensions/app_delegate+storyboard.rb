@@ -13,7 +13,19 @@ class AppDelegate
   end
 
   def storyboard
-    @storyboard ||= UIStoryboard.storyboardWithName("MainStoryboard", bundle:nil)
+    @storyboard ||= 
+      UIStoryboard.storyboardWithName("MainStoryboard_#{device_type}", bundle:nil)
   end
+
+  def user_default
+    @user_default ||= UserDefault.new
+  end
+
+  def device_type
+    @device_type ||= 
+      UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone ?  "iPhone" : "iPad"
+  end
+
 end
+
 
