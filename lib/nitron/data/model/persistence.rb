@@ -22,6 +22,10 @@ module Nitron
             model.save!
             model
           end
+
+          def find_or_create(attributes={})
+            self.where(attributes) or self.create(attributes)
+          end
         
           def new(attributes={})
             alloc.initWithEntity(entity_description, insertIntoManagedObjectContext:nil).tap do |model|

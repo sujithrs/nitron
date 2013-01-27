@@ -82,7 +82,9 @@ module Nitron
         end
       
         def where(format, *args)
-          new_predicate = NSPredicate.predicateWithFormat(format.gsub("?", "%@"), argumentArray:args)
+          _format, _arguments = reformat(format, *args)
+          new_predicate = NSPredicate.predicateWithFormat(_format, 
+                                                          argumentArray:_arguments)
 
           if self.predicate
             self.predicate = NSCompoundPredicate.andPredicateWithSubpredicates([predicate, new_predicate])
@@ -91,6 +93,14 @@ module Nitron
           end
 
           self
+        end
+
+        def reformat(format, *args)
+          if format.respond_to? :each
+            [format.keys.map{|x| "#{x} = %@"}.join(','), format.values]
+          else
+            [format.gsub("?", "%@"), args]
+          end
         end
       
       end
