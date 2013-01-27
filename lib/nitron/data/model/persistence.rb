@@ -25,7 +25,7 @@ module Nitron
 
           def find_or_create(attributes={})
             model = self.where(attributes)  
-            model.to_a.empty? ?  self.create(attributes) : model
+            model.to_a.empty? ?  self.create(attributes) : model.first
           end
         
           def new(attributes={})
@@ -86,6 +86,12 @@ module Nitron
           true
         end
       
+        def update_attributes(attributes)
+          attributes.each do |keyPath, value|
+            self.setValue(value, forKey:keyPath)
+          end
+          self.save
+        end
       end
     end
   end
