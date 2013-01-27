@@ -1,5 +1,8 @@
 module Nitron
   class TableViewController < ViewController
+    include CoreDataSource
+    attr_accessor :frc
+
     def self.collection(&block)
       options[:collection] = block
     end
@@ -24,28 +27,19 @@ module Nitron
     # This allows for code like:
     #
     #   def onFilterResults(searchText)
-    #     mutateDataSource { Task.where('name contains[ac] "foo"') }
+    #     reload { Task.where('name contains[ac] "foo"') }
     #   end
     #
     # This method is effective for filtering, but can
     # also be used for reordering as:
     #
     #    def onSortAlpha
-    #      mutateDataSource { Task.order('name[ac]') }
+    #      reload { Task.order('name[ac]') }
     #    end
     #
-    # N.b.: The default behavior is to reload the
-    # data, as the TableView is a data-backed control
-    # and why bother filtering or reordering if you
-    # don't plan to display? But... in the odd case
-    # where you want to do the reload yourself, simply
-    # pass +false+ as the argument to mutateDataSource
-    # and the automatic reload will be suppressed.
-    # 
     def reload(reload = true, &block)
       self.class.options[:collection] = block
-      @_dataSource = evaluateDataSource
-      view.dataSource = @_dataSource
+      load_frc
       view.reloadData if reload
     end
 
@@ -55,20 +49,18 @@ module Nitron
       view.reloadData()
     end
 
-    def dataSource
-      @_dataSource ||= evaluateDataSource
-    end
-    
-    def evaluateDataSource
+    def load_frc
+      puts "evaluateDataSource"
       collection = self.instance_eval(&self.class.options[:collection])
 
-      case collection
-      when Array
-        ArrayDataSource.alloc.initWithCollection(collection, className:self.class.name)
-      when NSFetchRequest
-        CoreDataSource.alloc.initWithRequest(collection, owner:self, sectionNameKeyPath:self.class.options[:groupBy], options:self.class.options)
-      else
-        raise "Collection block must return an Array, or an NSFetchRequest"
+      context = UIApplication.sharedApplication.delegate.managedObjectContext
+      self.frc = NSFetchedResultsController.alloc.initWithFetchRequest(
+        collection, managedObjectContext:context, sectionNameKeyPath:nil, 
+        cacheName:nil)
+      self.frc.delegate = self
+      errorPtr = Pointer.new(:object)
+      unless self.frc.performFetch(errorPtr)
+        raise "Error fetching data"
       end
     end
 
@@ -77,7 +69,7 @@ module Nitron
 
       if view.respond_to?(:indexPathForSelectedRow)
         if view.indexPathForSelectedRow
-          model = dataSource.objectAtIndexPath(view.indexPathForSelectedRow)
+          model = self.frc.objectAtIndexPath(view.indexPathForSelectedRow)
         end
       end
 
@@ -89,118 +81,12 @@ module Nitron
       end
     end
 
-    def setValue(value, forKey: key)
-      if key == "staticDataSource"
-        raise "Static tables are not supported by TableViewController! Please use StaticTableViewController instead."
-      else
-        super
-      end
-    end
-
     def viewDidLoad
+      puts "datasource set"
       super
-
-      view.dataSource = dataSource
+      load_frc
+      #view.dataSource = dataSource
     end
 
-  protected
-
-    class ArrayDataSource
-      def initWithCollection(collection, className:className)
-        if init
-          @collection = collection
-          @className = className
-        end
-
-        self
-      end
-
-      def numberOfSectionsInTableView(tableView)
-        1
-      end
-
-      def objectAtIndexPath(indexPath)
-        @collection[indexPath.row]
-      end
-
-      def sectionForSectionIndexTitle(title, atIndex:index)
-        nil
-      end
-
-      def tableView(tableView, cellForRowAtIndexPath:indexPath)
-        @cellReuseIdentifier ||= "#{@className.gsub("ViewController", "")}Cell"
-        unless cell = tableView.dequeueReusableCellWithIdentifier(@cellReuseIdentifier)
-          puts "Unable to find a cell named #{@cellReuseIdentifier}. Have you set the reuse identifier of the UITableViewCell?"
-          return
-        end
-
-        cell
-      end
-
-      def tableView(tableView, numberOfRowsInSection:section)
-        @collection.size
-      end
-    end
-
-    class CoreDataSource
-      def initWithRequest(request, owner:owner, sectionNameKeyPath:sectionNameKeyPath, options:options)
-        if init
-          context = UIApplication.sharedApplication.delegate.managedObjectContext
-
-          @className = owner.class.name
-          @controller = NSFetchedResultsController.alloc.initWithFetchRequest(request,
-                                                                              managedObjectContext:context,
-                                                                              sectionNameKeyPath:sectionNameKeyPath,
-                                                                              cacheName:nil)
-          @controller.delegate = owner
-          @options = options
-
-          errorPtr = Pointer.new(:object)
-          unless @controller.performFetch(errorPtr)
-            raise "Error fetching data"
-          end
-        end
-
-        self
-      end
-
-      def numberOfSectionsInTableView(tableView)
-        @controller.sections.size
-      end
-
-      def objectAtIndexPath(indexPath)
-        @controller.objectAtIndexPath(indexPath)
-      end
-
-      def sectionForSectionIndexTitle(title, atIndex:index)
-        @collection.sectionForSectionIndexTitle(title, atIndex:index)
-      end
-
-      def sectionIndexTitlesForTableView(tableView)
-        if @options[:groupIndex]
-          @controller.sectionIndexTitles
-        else
-          nil
-        end
-      end
-
-      def tableView(tableView, cellForRowAtIndexPath:indexPath)
-        @cellReuseIdentifier ||= "#{@className.gsub("ViewController", "")}Cell"
-        unless cell = tableView.dequeueReusableCellWithIdentifier(@cellReuseIdentifier)
-          puts "Unable to find a cell named #{@cellReuseIdentifier}. Have you set the reuse identifier of the UITableViewCell?"
-          return nil
-        end
-
-        cell
-      end
-
-      def tableView(tableView, numberOfRowsInSection:section)
-        @controller.sections[section].numberOfObjects
-      end
-
-      def tableView(tableView, titleForHeaderInSection:section)
-        @controller.sections[section].name
-      end
-    end
   end
 end
