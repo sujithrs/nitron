@@ -14,5 +14,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Nitron::VERSION
 
-  gem.add_dependency 'motion-cocoapods', '>= 1.0.1'
+  #gem.add_dependency 'motion-cocoapods', '>= 1.0.1'
 end
