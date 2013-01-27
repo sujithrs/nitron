@@ -24,7 +24,8 @@ module Nitron
           end
 
           def find_or_create(attributes={})
-            self.where(attributes) or self.create(attributes)
+            model = self.where(attributes)  
+            model.to_a.empty? ?  self.create(attributes) : model
           end
         
           def new(attributes={})
