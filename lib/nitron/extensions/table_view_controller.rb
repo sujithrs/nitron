@@ -46,12 +46,16 @@ module Nitron
   protected
 
     def controllerDidChangeContent(controller)
-      view.reloadData()
+      puts "controllerDidChangeContent"
+      self.view.reloadData()
+    end
+
+    def collection
+      self.instance_eval(&self.class.options[:collection])
     end
 
     def load_frc
-      puts "evaluateDataSource"
-      collection = self.instance_eval(&self.class.options[:collection])
+      puts "load_frc"
 
       context = UIApplication.sharedApplication.delegate.managedObjectContext
       self.frc = NSFetchedResultsController.alloc.initWithFetchRequest(
@@ -65,6 +69,7 @@ module Nitron
     end
 
     def prepareForSegue(segue, sender:sender)
+      puts "prepareForSegue"
       model = nil
 
       if view.respond_to?(:indexPathForSelectedRow)
@@ -85,7 +90,7 @@ module Nitron
       puts "datasource set"
       super
       load_frc
-      #view.dataSource = dataSource
+      #view.delegate = self
     end
 
   end

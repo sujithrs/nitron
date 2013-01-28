@@ -6,6 +6,8 @@ class AppDelegate
       @window.rootViewController = storyboard.instantiateInitialViewController
     end
 
+    on_init if self.respond_to? :on_init
+
     @window.rootViewController.wantsFullScreenLayout = true
     @window.makeKeyAndVisible
 

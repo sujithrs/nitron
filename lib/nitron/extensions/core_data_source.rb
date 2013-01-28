@@ -1,7 +1,7 @@
 module Nitron
   module CoreDataSource
     def numberOfSectionsInTableView(tableView)
-      self.frc.sections.size
+      self.frc.sections.count
     end
 
     def objectAtIndexPath(indexPath)
@@ -9,11 +9,13 @@ module Nitron
     end
 
     def sectionForSectionIndexTitle(title, atIndex:index)
-      @collection.sectionForSectionIndexTitle(title, atIndex:index)
+      self.frc.sectionForSectionIndexTitle(title, atIndex:index)
     end
 
     def tableView(tableView, numberOfRowsInSection:section)
-      self.frc.sections[section].numberOfObjects
+      puts "numberOfRowsInSection - #{section}"
+      puts "numberOfRowsInSection - #{self.frc.sections.objectAtIndex(section).numberOfObjects}"
+      self.frc.sections.objectAtIndex(section).numberOfObjects
     end
 
     def tableView(tableView, titleForHeaderInSection:section)
