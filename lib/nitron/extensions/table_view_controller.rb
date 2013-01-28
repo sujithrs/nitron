@@ -46,7 +46,6 @@ module Nitron
   protected
 
     def controllerDidChangeContent(controller)
-      puts "controllerDidChangeContent"
       self.view.reloadData()
       _scroll_to_position
     end
@@ -87,19 +86,25 @@ module Nitron
     def viewDidLoad
       super
       load_frc
-      _scroll_to_position
       #view.delegate = self
+    end
+
+    def viewWillAppear(animated)
+      super
+      _scroll_to_position
     end
 
     def _scroll_to_position
       return unless self.respond_to? :scroll_to_position
       position, animated = scroll_to_position
+      puts "position, animated is #{position}, #{animated}"
       lastSection = self.view.numberOfSections - 1
       return if lastSection < 0 
 
       lastRow = self.view.numberOfRowsInSection(lastSection) - 1
       return if lastRow < 0 
       ip = NSIndexPath.indexPathForRow(lastRow, inSection:lastSection)
+      puts "lastSection, lastRow is #{lastSection}, #{lastRow}"
       self.view.scrollToRowAtIndexPath(ip, 
           atScrollPosition:position, animated:animated)
     end
