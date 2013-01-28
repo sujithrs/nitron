@@ -13,8 +13,6 @@ module Nitron
     end
 
     def tableView(tableView, numberOfRowsInSection:section)
-      puts "numberOfRowsInSection - #{section}"
-      puts "numberOfRowsInSection - #{self.frc.sections.objectAtIndex(section).numberOfObjects}"
       self.frc.sections.objectAtIndex(section).numberOfObjects
     end
 

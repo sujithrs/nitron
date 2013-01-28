@@ -48,6 +48,7 @@ module Nitron
     def controllerDidChangeContent(controller)
       puts "controllerDidChangeContent"
       self.view.reloadData()
+      _scroll_to_position
     end
 
     def collection
@@ -55,8 +56,6 @@ module Nitron
     end
 
     def load_frc
-      puts "load_frc"
-
       context = UIApplication.sharedApplication.delegate.managedObjectContext
       self.frc = NSFetchedResultsController.alloc.initWithFetchRequest(
         collection, managedObjectContext:context, sectionNameKeyPath:nil, 
@@ -69,7 +68,6 @@ module Nitron
     end
 
     def prepareForSegue(segue, sender:sender)
-      puts "prepareForSegue"
       model = nil
 
       if view.respond_to?(:indexPathForSelectedRow)
@@ -87,10 +85,23 @@ module Nitron
     end
 
     def viewDidLoad
-      puts "datasource set"
       super
       load_frc
+      _scroll_to_position
       #view.delegate = self
+    end
+
+    def _scroll_to_position
+      return unless self.respond_to? :scroll_to_position
+      position, animated = scroll_to_position
+      lastSection = self.view.numberOfSections - 1
+      return if lastSection < 0 
+
+      lastRow = self.view.numberOfRowsInSection(lastSection) - 1
+      return if lastRow < 0 
+      ip = NSIndexPath.indexPathForRow(lastRow, inSection:lastSection)
+      self.view.scrollToRowAtIndexPath(ip, 
+          atScrollPosition:position, animated:animated)
     end
 
   end
