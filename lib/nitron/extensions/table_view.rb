@@ -41,8 +41,9 @@ module Nitron
     end
 
     def touchesEnded(touches, withEvent:event)
-      self.findFirstResponderBeneathView(self).resignFirstResponder
-      super.touchesEnded(touches, withEvent:event)
+      responder = self.findFirstResponderBeneathView(self)
+      responder and responder.resignFirstResponder
+      super
     end 
 
     #define _UIKeyboardFrameEndUserInfoKey 
@@ -57,9 +58,9 @@ module Nitron
       firstResponder = self.findFirstResponderBeneathView(self)
       return unless firstResponder # No child view is the first responder 
       
-      unless _priorInsetSaved
-        _priorInset = self.contentInset
-        _priorInsetSaved = true
+      unless self._priorInsetSaved
+        self._priorInset = self.contentInset
+        self._priorInsetSaved = true
       end
       
       # Shrink view's inset by the keyboard's height, and 
@@ -85,9 +86,9 @@ module Nitron
       UIView.beginAnimations(nil, context:nil)
       UIView.setAnimationCurve(notification.userInfo.objectForKey(UIKeyboardAnimationCurveUserInfoKey).intValue)
       UIView.setAnimationDuration(notification.userInfo.objectForKey(UIKeyboardAnimationDurationUserInfoKey).floatValue)
-      self.contentInset = _priorInset
+      self.contentInset = self._priorInset
       self.setScrollIndicatorInsets(self.contentInset)
-      _priorInsetSaved = false
+      self._priorInsetSaved = false
       UIView.commitAnimations
     end
 
